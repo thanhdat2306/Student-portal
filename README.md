@@ -1,91 +1,89 @@
 # Student Portal API
 
-Bu proje, bir üniversite sistemi gibi düşünülebilecek basit bir öğrenci portalı API'sidir. Modern yazılım mimarisi prensiplerini izleyerek, Entity Framework Core ve Code First yaklaşımı ile Microsoft SQL Server veritabanı kullanılarak geliştirilmiştir. API, öğrencilerin ve derslerin yönetimini sağlar ve kullanıcı kimlik doğrulaması için JWT (JSON Web Token) kullanır. Proje, Onion Architecture prensipleri doğrultusunda katmanlı bir yapıya sahiptir.
+This project is a simple student portal API that can be thought of as a university system. It is developed using Entity Framework Core and the Code First approach with Microsoft SQL Server database, following modern software architecture principles. The API manages students and courses and uses JWT (JSON Web Token) for user authentication. The project has a layered structure in accordance with the principles of Onion Architecture.
 
-## Proje Mimarisi
+## Project Architecture
 
-Proje, bağımlılıkları yönetmek ve kodu daha düzenli hale getirmek için Onion Architecture prensipleri doğrultusunda katmanlı bir mimari kullanır. Her katman belirli bir sorumluluğa sahiptir ve sadece kendisinden daha düşük seviyeli katmanlara bağımlıdır.
+The project uses a layered architecture based on Onion Architecture principles to manage dependencies and organize code more effectively. Each layer has a specific responsibility and depends only on layers below it.
+### 1. Core Layer
 
-### 1. Core Katmanı
+This layer contains the business logic and rules of the application. It consists of two structures:
 
-Bu katman, uygulamanın iş mantığını ve kurallarını içerir. İki yapıdan oluşur:
+
 
 - **Domain**:
-  - Uygulamanın temel yapı taşlarını (Entities) tanımlar. Örneğin, `Student` ve `Course` entity'leri burada bulunur.
-  - İş kurallarını ve doğrulamalarını içerir.
-  - Veritabanı veya diğer altyapı teknolojilerinden bağımsızdır.
+  - Defines the core building blocks (Entities) of the application. For example, the Student and Course entities are located here.
+  - Contains business rules and validations.
+  - It is independent of databases or other infrastructure technologies.
 
 - **Application**:
-  - Use case'leri ve iş mantığının uygulanmasını içerir.
-  - Domain katmanındaki entity'leri ve arayüzleri kullanarak iş operasyonlarını gerçekleştirir.
-  - Veritabanı veya diğer altyapı teknolojilerinden bağımsızdır.
-  - CQRS (Command Query Responsibility Segregation) desenini kullanarak komutları ve sorguları ayırır.
+  - Contains the use cases and business logic implementation.
+  - Performs business operations using the entities and interfaces in the Domain layer.
+  - Is independent of database or other infrastructure technologies.
+  - Uses the CQRS (Command Query Responsibility Segregation) pattern to separate commands and queries.
 
-### 2. Infrastructure Katmanı
+### 2. Infrastructure Layer
 
-Bu katman, uygulamanın altyapısal bileşenlerini içerir. Temelde iki yapıdan oluşur ancak bu projede SignalR temeli atılmıştır:
+This layer contains the infrastructure components of the application. It consists of two main structures, with SignalR being introduced in this project:
 
 - **Infrastructure**:
-  - Uygulama genelinde kullanılan ortak altyapı bileşenlerini içerir.
-  - Örneğin, e-posta gönderme, logging gibi işlemler için servisler burada bulunabilir.
+  - Contains common infrastructure components used throughout the application.
+  - For example, services for tasks like sending emails or logging can be found here.
 
 - **Persistence**:
-  - Veritabanı erişimini yönetir.
-  - Entity Framework Core kullanarak veritabanı işlemlerini gerçekleştirir.
-  - Repository desenini kullanarak veritabanı erişimini soyutlar.
-  - Domain katmanındaki entity'leri veritabanı tablolarına eşler.
+  - Manages database access.
+  - Uses Entity Framework Core to perform database operations.
+  - Abstracts database access using the Repository pattern.
+  - Maps the entities in the Domain layer to database tables.
 
 - **SignalR**:
-  - Gerçek zamanlı iletişim için SignalR Hub'larını içerir.
-  - Örneğin, öğrenci portalında yeni bir duyuru yayınlandığında veya bir ders güncellendiğinde, SignalR kullanılarak bağlı olan tüm kullanıcılara anında bildirim gönderilebilir.
+  - Contains SignalR Hubs for real-time communication.
+  - For example, when a new announcement is made or a course is updated in the student portal, SignalR can be used to instantly notify all connected users.
 
-### 3. Presentation Katmanı
+### 3. Presentation Layer
 
-Bu katman, kullanıcı arayüzünü ve API'yi içerir. Tek bir yapıdan oluşur:
+This layer contains the user interface and API. It consists of a single structure:
+
 
 - **API (.NET Web API)**:
-  - Uygulamanın dış dünyaya açılan kapısıdır.
-  - HTTP isteklerini alır ve Application katmanındaki use case'leri çağırarak işler.
-  - JSON formatında yanıtlar döndürür.
-  - Kullanıcı kimlik doğrulaması ve yetkilendirme için JWT (JSON Web Token) kullanır.
+  - Serves as the gateway to the application for external users.
+  - Handles HTTP requests and processes them by calling the use cases in the Application layer.
+  - Uses JWT (JSON Web Token) for user authentication and authorization.
 
-## Kimlik Doğrulama ve Yetkilendirme
+## Authentication and Authorization
 
-Proje, kullanıcı kimlik doğrulaması ve yetkilendirme için JWT (JSON Web Token) kullanır. Kullanıcılar, kullanıcı adı ve şifreleriyle giriş yaparak bir Access Token ve bir Refresh Token alırlar.
+The project uses JWT (JSON Web Token) for user authentication and authorization. Users log in with their username and password to receive an Access Token and a Refresh Token.
 
-- **Access Token**: API'ye erişmek için kullanılır ve sınırlı bir geçerlilik süresine sahiptir.
-- **Refresh Token**: Access Token'ın süresi dolduğunda yeni bir Access Token almak için kullanılır ve daha uzun bir geçerlilik süresine sahiptir.
+- **Access Token**: Used to access the API and has a limited validity period.
+- **Refresh Token**: Used to obtain a new Access Token when the original Access Token expires and has a longer validity period.
 
-## Proje Detayları
+## Project Details
 
-- **Student (Öğrenci)**: Öğrenci bilgilerini içerir (Ad, Soyad, Bölüm, vb.).
-- **Course (Ders)**: Ders bilgilerini içerir (Ders Adı, Ders Kodu, vb.).
-- **AppUser**: Uygulama kullanıcılarını temsil eder.
-- **AppRole**: Kullanıcı rollerini temsil eder.
+- **Student**
+- **Course**
+- **AppUser**
+- **AppRole**
 
-## Kurulum ve Çalıştırma
+## Setup and Running
 
-1. **Projeyi klonlayın:**
+1. **Clone the project::**
    ```bash
-   git clone https://github.com/mevlutayilmaz/simple-web-api.git
+   git clone https://github.com/thanhdat2306/Student-portal.git
    
-2. **`StudentPortal.API` klasörüne gidin.**
+2. **Navigate to the StudentPortal.API directory.**
 
-3. **`appsettings.json` dosyasında veritabanı bağlantı bilgilerini ayarlayın.**
+3. **Configure the database connection in the appsettings.json file.**
 
-4. **Paketleri yükleyin:**
+4. **Install the packages:**
    ```bash
    dotnet restore
    
-5. **Veritabanını oluşturun ve migrate edin:**
+5. **Create and migrate the database:**
    ```bash
    dotnet ef database update
 
-6. **Projeyi çalıştırın:**
+6. **Run the project:**
    ```bash
    dotnet run
 
-## Sonuç
-
-Bu proje, temiz bir mimari ve modern teknolojiler kullanarak geliştirilmiş, güvenli ve ölçeklenebilir bir öğrenci portalı API'sidir. Proje, katmanlı yapısı sayesinde bakımı ve geliştirilmesi kolaydır.
 
